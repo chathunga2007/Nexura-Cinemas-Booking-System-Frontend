@@ -3,11 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Clock, 
-  Ticket, 
-  Sparkles, 
   Check, 
-  AlertCircle, 
-  Armchair, 
   Heart, 
   Crown,
   ChevronRight
@@ -15,9 +11,10 @@ import {
 import toast from 'react-hot-toast';
 import { showTimeApi, MOCK_MOVIES, MOCK_SHOWTIMES } from '../services/api';
 import { useBooking } from '../context/BookingContext';
+import { Seat } from '../types';
 
 export default function SeatSelection() {
-  const { showTimeId } = useParams();
+  const { showTimeId } = useParams<{ showTimeId: string }>();
   const navigate = useNavigate();
 
   const {
@@ -32,15 +29,14 @@ export default function SeatSelection() {
     isHolding
   } = useBooking();
 
-  const [seatLayout, setSeatLayout] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [seatLayout, setSeatLayout] = useState<Seat[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function loadLayout() {
       setLoading(true);
       try {
-        // If showtime or movie isn't in context yet (e.g. direct URL visit)
-        if (!selectedShowtime) {
+        if (!selectedShowtime && showTimeId) {
           const fallbackSt = MOCK_SHOWTIMES.find(s => s.id === Number(showTimeId)) || MOCK_SHOWTIMES[0];
           setSelectedShowtime(fallbackSt);
           if (!selectedMovie) {
@@ -48,8 +44,10 @@ export default function SeatSelection() {
           }
         }
 
-        const layout = await showTimeApi.getLayout(showTimeId);
-        setSeatLayout(layout);
+        if (showTimeId) {
+          const layout = await showTimeApi.getLayout(showTimeId);
+          setSeatLayout(layout || []);
+        }
       } catch (err) {
         console.error('Failed to load seat layout:', err);
       } finally {
@@ -57,10 +55,10 @@ export default function SeatSelection() {
       }
     }
     loadLayout();
-  }, [showTimeId]);
+  }, [showTimeId, selectedShowtime, selectedMovie, setSelectedShowtime, setSelectedMovie]);
 
   // Group seats by rowLetter
-  const rowsMap = seatLayout.reduce((acc, seat) => {
+  const rowsMap = seatLayout.reduce((acc: Record<string, Seat[]>, seat: Seat) => {
     if (!acc[seat.rowLetter]) acc[seat.rowLetter] = [];
     acc[seat.rowLetter].push(seat);
     return acc;
@@ -68,7 +66,7 @@ export default function SeatSelection() {
 
   const rowKeys = Object.keys(rowsMap).sort();
 
-  const getSeatVisuals = (seat) => {
+  const getSeatVisuals = (seat: Seat) => {
     const isSelected = selectedSeats.some((s) => s.id === seat.id);
 
     if (seat.seatStatus === 'BOOKED') {
@@ -94,7 +92,7 @@ export default function SeatSelection() {
     }
   };
 
-  const handleSeatClick = (seat) => {
+  const handleSeatClick = (seat: Seat) => {
     if (seat.seatStatus === 'BOOKED') {
       toast.error(`Seat ${seat.rowLetter}${seat.seatNumber} is already booked.`);
       return;
@@ -125,7 +123,7 @@ export default function SeatSelection() {
   return (
     <div className="min-h-screen pb-36">
       
-      {/* ---------------- Top Header Bar ---------------- */}
+      {/* Top Header Bar */}
       <div className="border-b border-slate-800 bg-slate-950/70 backdrop-blur-xl sticky top-20 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           
@@ -163,9 +161,8 @@ export default function SeatSelection() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
         
-        {/* ---------------- Cinema Screen Curved Glow ---------------- */}
+        {/* Cinema Screen Curved Glow */}
         <div className="relative mb-16 text-center max-w-3xl mx-auto">
-          {/* Curved glowing line */}
           <div className="h-2.5 w-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent rounded-full cinema-screen-glow mb-4" />
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-cyan-400/80">
             ALL EYES THIS WAY • CURVED 4K LASER SCREEN
@@ -173,7 +170,7 @@ export default function SeatSelection() {
           <div className="w-3/4 mx-auto h-12 bg-gradient-to-b from-cyan-500/10 to-transparent pointer-events-none rounded-t-full" />
         </div>
 
-        {/* ---------------- Seat Matrix Layout ---------------- */}
+        {/* Seat Matrix Layout */}
         <div className="space-y-4 overflow-x-auto pb-6 text-center no-scrollbar">
           {rowKeys.map((rowLetter) => {
             const seats = rowsMap[rowLetter];
@@ -228,7 +225,7 @@ export default function SeatSelection() {
           })}
         </div>
 
-        {/* ---------------- Seat Categories Legend ---------------- */}
+        {/* Seat Categories Legend */}
         <div className="mt-14 p-5 rounded-3xl bg-slate-900/60 border border-slate-800/80 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-300">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-md bg-slate-800 border border-slate-700" />
@@ -268,7 +265,7 @@ export default function SeatSelection() {
 
       </div>
 
-      {/* ---------------- Floating Bottom Booking Bar ---------------- */}
+      {/* Floating Bottom Booking Bar */}
       <div className="fixed bottom-0 inset-x-0 z-30 bg-[#090A0F]/95 backdrop-blur-2xl border-t border-slate-800/90 py-4 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           
