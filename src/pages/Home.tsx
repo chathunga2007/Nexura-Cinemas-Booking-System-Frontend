@@ -4,27 +4,27 @@ import {
   Play, 
   Ticket, 
   Star, 
-  Clock, 
   Sparkles, 
   SlidersHorizontal, 
   Tv, 
   Volume2, 
   Armchair, 
   Popcorn, 
-  ChevronRight,
-  ShieldCheck,
-  MapPin
+  MapPin,
+  ExternalLink
 } from 'lucide-react';
 import { movieApi, MOCK_MOVIES, MOCK_THEATRES } from '../services/api';
+import { handleImageError, FALLBACK_POSTER } from '../utils/imageFallback';
 import MovieCard from '../components/MovieCard';
 import TrailerModal from '../components/TrailerModal';
+import { Movie } from '../types';
 
 export default function Home() {
-  const [movies, setMovies] = useState(MOCK_MOVIES);
-  const [featuredMovie, setFeaturedMovie] = useState(MOCK_MOVIES[0]);
-  const [activeTrailer, setActiveTrailer] = useState(null);
-  const [selectedExperience, setSelectedExperience] = useState('ALL');
-  const [selectedLanguage, setSelectedLanguage] = useState('ALL');
+  const [movies, setMovies] = useState<Movie[]>(MOCK_MOVIES);
+  const [featuredMovie, setFeaturedMovie] = useState<Movie>(MOCK_MOVIES[0]);
+  const [activeTrailer, setActiveTrailer] = useState<Movie | null>(null);
+  const [selectedExperience, setSelectedExperience] = useState<string>('ALL');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('ALL');
   const [searchParams] = useSearchParams();
 
   const searchQuery = searchParams.get('search') || '';
@@ -44,7 +44,7 @@ export default function Home() {
   const filteredMovies = movies.filter((m) => {
     const matchesSearch = searchQuery
       ? m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.genre?.toLowerCase().includes(searchQuery.toLowerCase())
+        (m.genre && m.genre.toLowerCase().includes(searchQuery.toLowerCase()))
       : true;
 
     const matchesLanguage = selectedLanguage === 'ALL' || m.language === selectedLanguage;
@@ -59,15 +59,16 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       
-      {/* ---------------- 1. Cinematic Hero Billboard ---------------- */}
+      {/* 1. Cinematic Hero Billboard */}
       {featuredMovie && (
         <section className="relative min-h-[82vh] flex items-center justify-center overflow-hidden">
           
           {/* Backdrop Image with Multi-Gradient Overlay */}
           <div className="absolute inset-0 bg-slate-950">
             <img
-              src={featuredMovie.bannerUrl || featuredMovie.posterUrl}
+              src={featuredMovie.bannerUrl || featuredMovie.posterUrl || FALLBACK_POSTER}
               alt={featuredMovie.title}
+              onError={(e) => handleImageError(e, FALLBACK_POSTER)}
               className="w-full h-full object-cover object-center opacity-40 scale-105 transition-all duration-1000 ease-out"
             />
             {/* Dark Vignette Gradients */}
@@ -153,7 +154,12 @@ export default function Home() {
                       : 'border-slate-800 hover:border-slate-600 opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={m.posterUrl} alt={m.title} className="w-full h-full object-cover" />
+                  <img 
+                    src={m.posterUrl || FALLBACK_POSTER} 
+                    alt={m.title} 
+                    onError={(e) => handleImageError(e, FALLBACK_POSTER)}
+                    className="w-full h-full object-cover" 
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent p-1.5 flex flex-col justify-end">
                     <p className="text-[11px] font-bold text-white truncate text-left">{m.title}</p>
                   </div>
@@ -165,7 +171,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* ---------------- 2. Filter & Experience Selector Bar ---------------- */}
+      {/* 2. Filter & Experience Selector Bar */}
       <section className="sticky top-20 z-30 bg-[#090A0F]/95 backdrop-blur-xl border-y border-slate-800/80 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -211,7 +217,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---------------- 3. Now Showing Movies Grid ---------------- */}
+      {/* 3. Now Showing Movies Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-end justify-between mb-8">
           <div>
@@ -251,7 +257,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* ---------------- 4. Signature Cinematic Experiences ---------------- */}
+      {/* 4. Signature Cinematic Experiences */}
       <section id="experiences" className="py-20 border-t border-slate-800/80 bg-gradient-to-b from-[#090A0F] to-[#0D101A]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
@@ -265,11 +271,17 @@ export default function Home() {
             <p className="text-xs sm:text-sm text-slate-400 mt-2">
               Next-generation projection, thunderous spatial audio, and unmatched seating comfort across all our locations.
             </p>
+            <Link
+              to="/experiences"
+              className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 hover:text-white border border-slate-800 transition-colors"
+            >
+              <span>Explore All Cinematic Formats</span>
+              <ExternalLink className="w-3.5 h-3.5 text-rose-400" />
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             
-            {/* Experience Card 1 */}
             <div className="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-rose-500/50 transition-all duration-300 group">
               <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-6 group-hover:scale-110 transition-transform">
                 <Tv className="w-7 h-7" />
@@ -280,7 +292,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Experience Card 2 */}
             <div className="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-amber-500/50 transition-all duration-300 group">
               <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition-transform">
                 <Volume2 className="w-7 h-7" />
@@ -291,7 +302,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Experience Card 3 */}
             <div className="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-cyan-500/50 transition-all duration-300 group">
               <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-6 group-hover:scale-110 transition-transform">
                 <Armchair className="w-7 h-7" />
@@ -307,7 +317,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---------------- 5. Theatres & Venues Grid ---------------- */}
+      {/* 5. Theatres & Venues Grid */}
       <section id="theatres" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="flex items-end justify-between mb-10">
           <div>
@@ -318,6 +328,14 @@ export default function Home() {
               Our Flagship Cinema Theatres
             </h2>
           </div>
+
+          <Link
+            to="/theatres"
+            className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 hover:text-white border border-slate-800 transition-colors flex items-center gap-1.5"
+          >
+            <span>View All Multiplexes</span>
+            <ExternalLink className="w-3.5 h-3.5 text-rose-400" />
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -340,7 +358,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---------------- 6. Pre-order Concessions Spotlight ---------------- */}
+      {/* 6. Pre-order Concessions Spotlight */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mb-10">
         <div className="rounded-3xl p-8 sm:p-12 bg-gradient-to-r from-rose-950/60 via-slate-900 to-amber-950/40 border border-rose-500/20 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="max-w-xl space-y-3">
