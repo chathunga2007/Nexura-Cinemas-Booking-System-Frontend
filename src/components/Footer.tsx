@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Film, Phone, Mail, MapPin, ShieldCheck, Heart, Sparkles } from 'lucide-react';
+import { Film, Phone, Mail, MapPin, Sparkles } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -64,14 +64,14 @@ export default function Footer() {
           {/* Experiences & Dining */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-4">
-              Experiences
+              Explore Nexura
             </h4>
             <ul className="space-y-2.5 text-xs">
-              <li><a href="#experiences" className="hover:text-rose-400 transition-colors">IMAX with Laser</a></li>
-              <li><a href="#experiences" className="hover:text-rose-400 transition-colors">Dolby Atmos Surround</a></li>
-              <li><a href="#experiences" className="hover:text-rose-400 transition-colors">VIP Recliner Lounges</a></li>
+              <li><Link to="/experiences" className="hover:text-rose-400 transition-colors">IMAX with Laser</Link></li>
+              <li><Link to="/experiences" className="hover:text-rose-400 transition-colors">Dolby Atmos Surround</Link></li>
+              <li><Link to="/theatres" className="hover:text-rose-400 transition-colors">Multiplex Theatres</Link></li>
               <li><Link to="/concessions" className="hover:text-rose-400 transition-colors">Caramel Popcorn & Snacks</Link></li>
-              <li><a href="#experiences" className="hover:text-rose-400 transition-colors">Private Cinema Hire</a></li>
+              <li><Link to="/about" className="text-rose-400 font-semibold hover:text-rose-300 transition-colors flex items-center gap-1">About Us & Creator</Link></li>
             </ul>
           </div>
 
@@ -96,13 +96,16 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Nexura Cinemas PVT LTD. All rights reserved.</p>
+          <div>
+            <p>© {new Date().getFullYear()} Nexura Cinemas PVT LTD. All rights reserved.</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Architected & Engineered by <Link to="/about" className="text-rose-400 hover:text-rose-300 font-bold underline decoration-rose-500/40">Chathunga</Link>
+            </p>
+          </div>
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1 text-slate-400">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" /> The Ultimate Cinematic Experience
-            </span>
-            <a href="#" className="hover:text-slate-300">Privacy Policy</a>
-            <a href="#" className="hover:text-slate-300">Terms of Service</a>
+            <Link to="/about" className="hover:text-slate-300 font-medium">About Creator</Link>
+            <Link to="/theatres" className="hover:text-slate-300">Theatres</Link>
+            <Link to="/experiences" className="hover:text-slate-300">Experiences</Link>
           </div>
         </div>
 
