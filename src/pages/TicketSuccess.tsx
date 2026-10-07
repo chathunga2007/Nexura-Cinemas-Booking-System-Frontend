@@ -5,25 +5,20 @@ import confetti from 'canvas-confetti';
 import { 
   CheckCircle, 
   Printer, 
-  Share2, 
   Ticket, 
-  MapPin, 
-  Calendar, 
-  Clock, 
   Popcorn, 
   Home, 
-  Sparkles,
   ShieldCheck
 } from 'lucide-react';
 import { useBooking } from '../context/BookingContext';
+import { handleImageError, FALLBACK_POSTER } from '../utils/imageFallback';
 
 export default function TicketSuccess() {
-  const { reference } = useParams();
+  const { reference } = useParams<{ reference: string }>();
   const { latestBooking } = useBooking();
-  const printRef = useRef(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Fire confetti blast
     try {
       confetti({
         particleCount: 80,
@@ -31,7 +26,7 @@ export default function TicketSuccess() {
         origin: { y: 0.6 },
         colors: ['#F43F5E', '#F59E0B', '#10B981', '#38BDF8']
       });
-    } catch (e) {
+    } catch {
       console.warn('Confetti unavailable');
     }
   }, []);
@@ -76,7 +71,7 @@ export default function TicketSuccess() {
         </p>
       </div>
 
-      {/* ---------------- Boarding-Pass Style Cinema Ticket ---------------- */}
+      {/* Boarding-Pass Style Cinema Ticket */}
       <div 
         ref={printRef}
         className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative"
@@ -109,13 +104,12 @@ export default function TicketSuccess() {
         <div className="p-6 sm:p-8 space-y-6">
           
           <div className="flex flex-col sm:flex-row gap-5 items-start">
-            {booking.moviePoster && (
-              <img
-                src={booking.moviePoster}
-                alt={booking.movieTitle}
-                className="w-24 sm:w-28 aspect-[2/3] object-cover rounded-2xl shadow-lg border border-slate-700 shrink-0"
-              />
-            )}
+            <img
+              src={booking.moviePoster || FALLBACK_POSTER}
+              alt={booking.movieTitle}
+              onError={(e) => handleImageError(e, FALLBACK_POSTER)}
+              className="w-24 sm:w-28 aspect-[2/3] object-cover rounded-2xl shadow-lg border border-slate-700 shrink-0"
+            />
 
             <div className="space-y-3 flex-1">
               <div>
@@ -153,7 +147,7 @@ export default function TicketSuccess() {
             <div className="flex items-center justify-between text-slate-300">
               <span className="font-semibold text-white">Seats Reserved:</span>
               <div className="flex gap-1.5">
-                {booking.bookedSeats?.map((s, idx) => (
+                {booking.bookedSeats?.map((s: any, idx: number) => (
                   <span
                     key={idx}
                     className="px-2 py-0.5 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-300 font-mono font-bold"
@@ -170,7 +164,7 @@ export default function TicketSuccess() {
                   <Popcorn className="w-3.5 h-3.5 text-amber-400" /> Express Snacks:
                 </span>
                 <span className="text-slate-200">
-                  {booking.snacks.map((sn) => `${sn.name} (x${sn.quantity})`).join(', ')}
+                  {booking.snacks.map((sn: any) => `${sn.name} (x${sn.quantity})`).join(', ')}
                 </span>
               </div>
             )}
