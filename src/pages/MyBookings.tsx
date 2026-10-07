@@ -3,27 +3,24 @@ import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   Ticket, 
-  Calendar, 
   Clock, 
-  MapPin, 
   X, 
-  AlertCircle, 
-  CheckCircle, 
   Eye, 
-  ArrowLeft,
-  Popcorn
+  ArrowLeft 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { bookingApi } from '../services/api';
+import { handleImageError, FALLBACK_POSTER } from '../utils/imageFallback';
 import { useAuth } from '../context/AuthContext';
+import { Booking } from '../types';
 
 export default function MyBookings() {
-  const { user, isAuthenticated, setAuthModalOpen } = useAuth();
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState(null);
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedTicket, setSelectedTicket] = useState<Booking | null>(null);
 
-  const fallbackBookings = [
+  const fallbackBookings: Booking[] = [
     {
       id: 101,
       bookingReference: 'NX-892143',
@@ -36,8 +33,8 @@ export default function MyBookings() {
       bookingStatus: 'CONFIRMED',
       qrCodeHash: 'NEXURA-PASS-NX-892143',
       bookedSeats: [
-        { rowLetter: 'C', seatNumber: 5, seatType: 'BALCONY' },
-        { rowLetter: 'C', seatNumber: 6, seatType: 'BALCONY' }
+        { id: 1, showTimeId: 101, seatNumber: 5, rowLetter: 'C', seatType: 'BALCONY', seatStatus: 'BOOKED', price: 2200 },
+        { id: 2, showTimeId: 101, seatNumber: 6, rowLetter: 'C', seatType: 'BALCONY', seatStatus: 'BOOKED', price: 2200 }
       ]
     },
     {
@@ -52,8 +49,8 @@ export default function MyBookings() {
       bookingStatus: 'CHECKED_IN',
       qrCodeHash: 'NEXURA-PASS-NX-651239',
       bookedSeats: [
-        { rowLetter: 'A', seatNumber: 1, seatType: 'VIP_RECLINER' },
-        { rowLetter: 'A', seatNumber: 2, seatType: 'VIP_RECLINER' }
+        { id: 3, showTimeId: 102, seatNumber: 1, rowLetter: 'A', seatType: 'VIP_RECLINER', seatStatus: 'BOOKED', price: 3800 },
+        { id: 4, showTimeId: 102, seatNumber: 2, rowLetter: 'A', seatType: 'VIP_RECLINER', seatStatus: 'BOOKED', price: 3800 }
       ]
     }
   ];
@@ -72,7 +69,7 @@ export default function MyBookings() {
         } else {
           setBookings(fallbackBookings);
         }
-      } catch (err) {
+      } catch {
         setBookings(fallbackBookings);
       } finally {
         setLoading(false);
@@ -81,7 +78,7 @@ export default function MyBookings() {
     loadBookings();
   }, [user]);
 
-  const handleCancelBooking = async (bookingId) => {
+  const handleCancelBooking = async (bookingId: number) => {
     if (window.confirm('Are you sure you want to cancel this booking and release seats?')) {
       try {
         await bookingApi.cancel(bookingId);
@@ -89,13 +86,13 @@ export default function MyBookings() {
         setBookings((prev) =>
           prev.map((b) => (b.id === bookingId ? { ...b, bookingStatus: 'CANCELLED' } : b))
         );
-      } catch (err) {
+      } catch {
         toast.error('Failed to cancel booking');
       }
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'CONFIRMED':
         return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
@@ -142,13 +139,12 @@ export default function MyBookings() {
               className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
             >
               <div className="flex gap-4 items-center">
-                {b.moviePoster && (
-                  <img
-                    src={b.moviePoster}
-                    alt={b.movieTitle}
-                    className="w-16 h-24 object-cover rounded-2xl border border-slate-700 shrink-0"
-                  />
-                )}
+                <img
+                  src={b.moviePoster || FALLBACK_POSTER}
+                  alt={b.movieTitle}
+                  onError={(e) => handleImageError(e, FALLBACK_POSTER)}
+                  className="w-16 h-24 object-cover rounded-2xl border border-slate-700 shrink-0"
+                />
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono font-bold text-amber-400">
