@@ -1,25 +1,53 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import toast from 'react-hot-toast';
-import { seatHoldApi, promoApi, bookingApi } from '../services/api';
+import { seatHoldApi, promoApi } from '../services/api';
+import { Movie, ShowTime, Seat, Concession, SelectedSnack, Booking } from '../types';
 
-const BookingContext = createContext();
+interface BookingContextType {
+  selectedMovie: Movie | null;
+  setSelectedMovie: (movie: Movie | null) => void;
+  selectedShowtime: ShowTime | null;
+  setSelectedShowtime: (showtime: ShowTime | null) => void;
+  selectedSeats: Seat[];
+  setSelectedSeats: (seats: Seat[]) => void;
+  toggleSeat: (seat: Seat) => void;
+  selectedSnacks: SelectedSnack[];
+  updateSnackQuantity: (snack: Concession, delta: number) => void;
+  promoCode: string;
+  discountAmount: number;
+  promoApplied: any;
+  applyPromo: (code: string) => Promise<void>;
+  removePromo: () => void;
+  seatsSubtotal: number;
+  snacksSubtotal: number;
+  subtotal: number;
+  finalTotal: number;
+  resetBooking: () => void;
+  holdSecondsLeft: number;
+  formattedHoldTimer: string;
+  isHolding: boolean;
+  latestBooking: Booking | null;
+  setLatestBooking: (booking: Booking | null) => void;
+}
 
-export function BookingProvider({ children }) {
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [selectedShowtime, setSelectedShowtime] = useState(null);
-  const [selectedSeats, setSelectedSeats] = useState([]);
-  const [selectedSnacks, setSelectedSnacks] = useState([]);
+const BookingContext = createContext<BookingContextType | undefined>(undefined);
+
+export function BookingProvider({ children }: { children: ReactNode }) {
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [selectedShowtime, setSelectedShowtime] = useState<ShowTime | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<Seat[]>([]);
+  const [selectedSnacks, setSelectedSnacks] = useState<SelectedSnack[]>([]);
   const [promoCode, setPromoCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [promoApplied, setPromoApplied] = useState(null);
-  const [latestBooking, setLatestBooking] = useState(null);
+  const [promoApplied, setPromoApplied] = useState<any>(null);
+  const [latestBooking, setLatestBooking] = useState<Booking | null>(null);
 
   // 10-Minute Hold Timer
   const [holdSecondsLeft, setHoldSecondsLeft] = useState(600);
   const [isHolding, setIsHolding] = useState(false);
 
   useEffect(() => {
-    let interval = null;
+    let interval: any = null;
     if (isHolding && holdSecondsLeft > 0) {
       interval = setInterval(() => {
         setHoldSecondsLeft((prev) => {
@@ -40,7 +68,7 @@ export function BookingProvider({ children }) {
   }, [isHolding, holdSecondsLeft]);
 
   // Toggle seat selection
-  const toggleSeat = async (seat) => {
+  const toggleSeat = (seat: Seat) => {
     const isAlreadySelected = selectedSeats.some((s) => s.id === seat.id);
 
     if (isAlreadySelected) {
@@ -51,7 +79,6 @@ export function BookingProvider({ children }) {
         setIsHolding(false);
         setHoldSecondsLeft(600);
       }
-      // Notify backend to release hold
       seatHoldApi.releaseSeat({
         seatId: seat.id,
         showTimeId: selectedShowtime?.id || seat.showTimeId,
@@ -59,18 +86,16 @@ export function BookingProvider({ children }) {
         seatNumber: seat.seatNumber
       });
     } else {
-      // Check max limit (8 seats per transaction)
+      // Limit to 8 seats
       if (selectedSeats.length >= 8) {
         toast.error('Maximum 8 seats can be selected per transaction.');
         return;
       }
 
-      // Optimistically hold
       const updated = [...selectedSeats, seat];
       setSelectedSeats(updated);
       setIsHolding(true);
 
-      // Call backend to lock seat
       seatHoldApi.holdSeat({
         seatId: seat.id,
         showTimeId: selectedShowtime?.id || seat.showTimeId,
@@ -81,7 +106,7 @@ export function BookingProvider({ children }) {
   };
 
   // Snack quantity handler
-  const updateSnackQuantity = (snack, delta) => {
+  const updateSnackQuantity = (snack: Concession, delta: number) => {
     setSelectedSnacks((prev) => {
       const existing = prev.find((item) => item.id === snack.id);
       if (!existing && delta > 0) {
@@ -100,14 +125,14 @@ export function BookingProvider({ children }) {
     });
   };
 
-  // Calculate Subtotals
+  // Subtotals
   const seatsSubtotal = selectedSeats.reduce((sum, seat) => sum + (seat.price || 0), 0);
   const snacksSubtotal = selectedSnacks.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const subtotal = seatsSubtotal + snacksSubtotal;
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
   // Apply Promo
-  const applyPromo = async (code) => {
+  const applyPromo = async (code: string) => {
     if (!code.trim()) {
       toast.error('Please enter a coupon code.');
       return;
@@ -142,7 +167,7 @@ export function BookingProvider({ children }) {
     setHoldSecondsLeft(600);
   };
 
-  const formatTimer = (seconds) => {
+  const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
