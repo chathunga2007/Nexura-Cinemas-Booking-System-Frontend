@@ -6,29 +6,28 @@ import {
   User, 
   LogOut, 
   ShieldCheck, 
-  Sparkles, 
   Clock, 
   Ticket, 
   Menu, 
   X,
-  Popcorn,
-  ChevronDown
+  Heart,
+  Sparkles,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout, setAuthModalOpen, setAuthModalMode, loginAsDemo } = useAuth();
+  const { user, isAuthenticated, logout, setAuthModalOpen, setAuthModalMode, isStaffOrAdmin } = useAuth();
   const { selectedSeats, formattedHoldTimer, isHolding } = useBooking();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [demoMenuOpen, setDemoMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
@@ -38,9 +37,11 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Movies', path: '/' },
-    { name: 'Experiences', path: '/#experiences' },
-    { name: 'Concessions & Snacks', path: '/concessions' },
-    { name: 'Theatres', path: '/#theatres' },
+    { name: 'Experiences', path: '/experiences' },
+    { name: 'Theatres', path: '/theatres' },
+    { name: 'Concessions', path: '/concessions' },
+    { name: 'Watchlist', path: '/watchlist' },
+    { name: 'About Us', path: '/about' },
   ];
 
   return (
@@ -106,64 +107,35 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Quick Demo Switcher Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setDemoMenuOpen(!demoMenuOpen)}
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-all"
-                title="Switch demo role to test Admin, Manager, Usher or Customer"
+            {/* Direct Staff Portal Button (Shown if staff/admin logged in) */}
+            {isStaffOrAdmin && (
+              <Link
+                to="/admin"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold transition-all shadow-sm"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Demo Roles</span>
-                <ChevronDown className="w-3 h-3" />
-              </button>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Staff Portal</span>
+              </Link>
+            )}
 
-              {demoMenuOpen && (
-                <div 
-                  className="absolute right-0 mt-2 w-52 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl animate-in fade-in slide-in-from-top-2"
-                  onMouseLeave={() => setDemoMenuOpen(false)}
-                >
-                  <div className="px-3 py-1.5 border-b border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    Switch Test Account
-                  </div>
-                  <button
-                    onClick={() => { loginAsDemo('SUPER_ADMIN'); setDemoMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-500/10 flex items-center justify-between"
-                  >
-                    <span>Super Admin</span>
-                    <span className="text-[10px] bg-rose-500/20 px-1.5 py-0.5 rounded text-rose-300">All Access</span>
-                  </button>
-                  <button
-                    onClick={() => { loginAsDemo('CINEMA_MANAGER'); setDemoMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2 text-xs text-amber-400 hover:bg-amber-500/10 flex items-center justify-between"
-                  >
-                    <span>Cinema Manager</span>
-                    <span className="text-[10px] bg-amber-500/20 px-1.5 py-0.5 rounded text-amber-300">Dashboard</span>
-                  </button>
-                  <button
-                    onClick={() => { loginAsDemo('TICKET_USHER'); setDemoMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2 text-xs text-cyan-400 hover:bg-cyan-500/10 flex items-center justify-between"
-                  >
-                    <span>Ticket Gate Usher</span>
-                    <span className="text-[10px] bg-cyan-500/20 px-1.5 py-0.5 rounded text-cyan-300">QR Check-in</span>
-                  </button>
-                  <button
-                    onClick={() => { loginAsDemo('CUSTOMER'); setDemoMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-white/5 flex items-center justify-between"
-                  >
-                    <span>Customer Cinephile</span>
-                    <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Booking</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* CineClub Points Pill */}
+            {isAuthenticated && (
+              <Link
+                to="/profile"
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-rose-500/10 hover:from-amber-500/20 hover:to-rose-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold shadow-sm transition-all"
+                title="View CineClub VIP & Loyalty Rewards"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>{user?.loyaltyPoints || 250} CinePoints</span>
+              </Link>
+            )}
 
             {/* User Profile or Login */}
             {isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 pl-3 rounded-full bg-slate-800/80 border border-slate-700/80 hover:border-slate-600 transition-all text-xs font-medium"
+                  className="flex items-center gap-2 p-1.5 pl-3 rounded-full bg-slate-800/80 border border-slate-700/80 hover:border-slate-600 transition-all text-xs font-medium cursor-pointer"
                 >
                   <span className="max-w-[100px] truncate text-slate-200">
                     {user?.fullName?.split(' ')[0] || 'User'}
@@ -181,10 +153,24 @@ export default function Navbar() {
                     <div className="px-4 py-2 border-b border-slate-800">
                       <p className="text-xs font-semibold text-white truncate">{user?.fullName}</p>
                       <p className="text-[11px] text-slate-400 truncate">{user?.email}</p>
-                      <span className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                        {user?.role?.replace('_', ' ')}
-                      </span>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                          {user?.role?.replace('_', ' ')}
+                        </span>
+                        <span className="text-[10px] font-bold text-amber-400">
+                          ★ {user?.loyaltyPoints || 250} Pts
+                        </span>
+                      </div>
                     </div>
+
+                    <Link
+                      to="/profile"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-amber-300 hover:text-white hover:bg-amber-500/10 transition-colors font-semibold"
+                    >
+                      <Crown className="w-4 h-4 text-amber-400" />
+                      <span>CineClub VIP & Profile</span>
+                    </Link>
 
                     <Link
                       to="/my-bookings"
@@ -195,7 +181,16 @@ export default function Navbar() {
                       <span>My Movie Tickets</span>
                     </Link>
 
-                    {['SUPER_ADMIN', 'CINEMA_MANAGER', 'TICKET_USHER'].includes(user?.role) && (
+                    <Link
+                      to="/watchlist"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      <Heart className="w-4 h-4 text-rose-400" />
+                      <span>My Watchlist</span>
+                    </Link>
+
+                    {isStaffOrAdmin && (
                       <Link
                         to="/admin"
                         onClick={() => setProfileDropdownOpen(false)}
@@ -209,7 +204,7 @@ export default function Navbar() {
                     <div className="border-t border-slate-800 mt-1">
                       <button
                         onClick={() => { logout(); setProfileDropdownOpen(false); }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs text-rose-400 hover:bg-rose-500/10 transition-colors"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs text-rose-400 hover:bg-rose-500/10 transition-colors text-left"
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Sign Out</span>
@@ -280,7 +275,7 @@ export default function Navbar() {
               >
                 <Ticket className="w-4 h-4" /> My Movie Tickets
               </Link>
-              {['SUPER_ADMIN', 'CINEMA_MANAGER', 'TICKET_USHER'].includes(user?.role) && (
+              {isStaffOrAdmin && (
                 <Link
                   to="/admin"
                   onClick={() => setMobileMenuOpen(false)}
