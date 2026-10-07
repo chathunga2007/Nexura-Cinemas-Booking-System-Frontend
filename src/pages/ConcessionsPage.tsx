@@ -6,16 +6,12 @@ import {
   Minus, 
   ArrowLeft, 
   ArrowRight, 
-  Ticket, 
-  Sparkles, 
-  Check, 
-  Flame, 
-  ShoppingBag,
-  Clock
+  ShoppingBag
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { concessionApi, MOCK_CONCESSIONS } from '../services/api';
+import { handleImageError, FALLBACK_CONCESSION } from '../utils/imageFallback';
 import { useBooking } from '../context/BookingContext';
+import { Concession } from '../types';
 
 export default function ConcessionsPage() {
   const navigate = useNavigate();
@@ -30,20 +26,16 @@ export default function ConcessionsPage() {
     subtotal
   } = useBooking();
 
-  const [concessions, setConcessions] = useState(MOCK_CONCESSIONS);
-  const [activeCategory, setActiveCategory] = useState('ALL');
-  const [loading, setLoading] = useState(true);
+  const [concessions, setConcessions] = useState<Concession[]>(MOCK_CONCESSIONS);
+  const [activeCategory, setActiveCategory] = useState<string>('ALL');
 
   useEffect(() => {
     async function loadConcessions() {
-      setLoading(true);
       try {
         const data = await concessionApi.getAll();
         if (data && data.length > 0) setConcessions(data);
       } catch (err) {
         console.error('Failed to load concessions:', err);
-      } finally {
-        setLoading(false);
       }
     }
     loadConcessions();
@@ -56,7 +48,7 @@ export default function ConcessionsPage() {
     return item.category === activeCategory;
   });
 
-  const getItemQuantity = (id) => {
+  const getItemQuantity = (id: number) => {
     const found = selectedSnacks.find((s) => s.id === id);
     return found ? found.quantity : 0;
   };
@@ -68,7 +60,7 @@ export default function ConcessionsPage() {
   return (
     <div className="min-h-screen pb-32">
       
-      {/* ---------------- Top Breadcrumb & Header ---------------- */}
+      {/* Top Breadcrumb & Header */}
       <div className="border-b border-slate-800 bg-slate-950/70 backdrop-blur-xl sticky top-20 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link
@@ -115,10 +107,10 @@ export default function ConcessionsPage() {
           ))}
         </div>
 
-        {/* ---------------- Main Content Grid ---------------- */}
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
-          {/* Concessions Cards (2 cols) */}
+          {/* Concessions Cards */}
           <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
             {filteredConcessions.map((item) => {
               const qty = getItemQuantity(item.id);
@@ -130,8 +122,9 @@ export default function ConcessionsPage() {
                 >
                   <div className="aspect-[16/10] overflow-hidden bg-slate-950 relative">
                     <img
-                      src={item.imageUrl}
+                      src={item.imageUrl || FALLBACK_CONCESSION}
                       alt={item.name}
+                      onError={(e) => handleImageError(e, FALLBACK_CONCESSION)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-bold text-amber-400 uppercase tracking-wider">
@@ -189,7 +182,7 @@ export default function ConcessionsPage() {
             })}
           </div>
 
-          {/* Order Summary Card (1 col) */}
+          {/* Order Summary Card */}
           <div className="lg:col-span-1 rounded-3xl bg-slate-900/80 border border-slate-800 p-6 sticky top-28 space-y-6">
             <h3 className="text-lg font-bold text-white font-['Outfit'] flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-rose-500" /> Booking Order Summary
