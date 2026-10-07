@@ -6,15 +6,12 @@ import {
   Tag, 
   ArrowLeft, 
   Check, 
-  Sparkles, 
   Lock, 
-  Ticket, 
-  Popcorn, 
-  HelpCircle,
-  AlertCircle
+  Ticket 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { bookingApi } from '../services/api';
+import { handleImageError, FALLBACK_POSTER } from '../utils/imageFallback';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -28,7 +25,6 @@ export default function CheckoutPage() {
     selectedSnacks,
     seatsSubtotal,
     snacksSubtotal,
-    subtotal,
     finalTotal,
     discountAmount,
     promoCode,
@@ -39,30 +35,30 @@ export default function CheckoutPage() {
   } = useBooking();
 
   // Contact details
-  const [customerName, setCustomerName] = useState(user?.fullName || 'Kasun Perera');
-  const [customerEmail, setCustomerEmail] = useState(user?.email || 'kasun.cinephile@gmail.com');
-  const [customerPhone, setCustomerPhone] = useState('+94 77 123 4567');
+  const [customerName, setCustomerName] = useState<string>(user?.fullName || 'Kasun Perera');
+  const [customerEmail, setCustomerEmail] = useState<string>(user?.email || 'kasun.cinephile@gmail.com');
+  const [customerPhone, setCustomerPhone] = useState<string>('+94 77 123 4567');
 
   // Promo code local input
-  const [couponInput, setCouponInput] = useState('');
+  const [couponInput, setCouponInput] = useState<string>('');
 
   // Payment method
-  const [paymentMethod, setPaymentMethod] = useState('PAYHERE'); // 'PAYHERE', 'CARD', 'COUNTER'
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'PAYHERE' | 'CARD' | 'COUNTER'>('PAYHERE');
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // Card details
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
+  const [cardNumber, setCardNumber] = useState<string>('');
+  const [cardExpiry, setCardExpiry] = useState<string>('');
+  const [cardCvv, setCardCvv] = useState<string>('');
 
-  const handleApplyCoupon = (e) => {
+  const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
     if (couponInput) {
       applyPromo(couponInput);
     }
   };
 
-  const handleCompletePayment = async (e) => {
+  const handleCompletePayment = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (selectedSeats.length === 0) {
@@ -74,7 +70,6 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
-      // Build booking payload for Spring Boot backend /api/booking/create
       const payload = {
         userId: user?.id || 1,
         showTimeId: selectedShowtime?.id || 101,
@@ -89,7 +84,6 @@ export default function CheckoutPage() {
 
       const result = await bookingApi.create(payload);
 
-      // Store booking result
       const confirmedBooking = {
         ...result,
         customerName,
@@ -125,7 +119,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen pb-24">
       
-      {/* ---------------- Top Breadcrumb ---------------- */}
+      {/* Top Breadcrumb */}
       <div className="border-b border-slate-800 bg-slate-950/70 backdrop-blur-xl sticky top-20 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link
@@ -329,7 +323,7 @@ export default function CheckoutPage() {
                       <input
                         type="password"
                         placeholder="•••"
-                        maxLength="4"
+                        maxLength={4}
                         value={cardCvv}
                         onChange={(e) => setCardCvv(e.target.value)}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white font-mono"
@@ -351,13 +345,12 @@ export default function CheckoutPage() {
 
             {/* Movie */}
             <div className="flex gap-3 text-xs">
-              {selectedMovie?.posterUrl && (
-                <img
-                  src={selectedMovie.posterUrl}
-                  alt={selectedMovie.title}
-                  className="w-14 h-20 object-cover rounded-xl shrink-0"
-                />
-              )}
+              <img
+                src={selectedMovie?.posterUrl || FALLBACK_POSTER}
+                alt={selectedMovie?.title || 'Selected Movie'}
+                onError={(e) => handleImageError(e, FALLBACK_POSTER)}
+                className="w-14 h-20 object-cover rounded-xl shrink-0"
+              />
               <div className="space-y-1">
                 <p className="font-bold text-white text-sm line-clamp-1">{selectedMovie?.title}</p>
                 <p className="text-slate-400">{selectedShowtime?.theatreName}</p>
