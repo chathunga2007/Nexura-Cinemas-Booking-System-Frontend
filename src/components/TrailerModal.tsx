@@ -1,11 +1,16 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { Movie } from '../types';
 
-export default function TrailerModal({ movie, onClose }) {
+interface TrailerModalProps {
+  movie: Movie | null;
+  onClose: () => void;
+}
+
+export default function TrailerModal({ movie, onClose }: TrailerModalProps) {
   if (!movie) return null;
 
-  // Extract YouTube ID
-  const getEmbedUrl = (url) => {
+  const getEmbedUrl = (url?: string) => {
     if (!url) return '';
     if (url.includes('embed/')) return url;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
